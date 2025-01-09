@@ -1,8 +1,6 @@
-# Plugin Federation Network (PFN) - ⚠️ BETA - USE WITH CAUTION ⚠️
+# Character Federation Network (CFN) - ⚠️ BETA - USE WITH CAUTION ⚠️
 
-A decentralized plugin distribution network that connects independent plugin publishers into a federated ecosystem.
-
-![Plugin Federation Demo Image](./docs/assets/fedplugins.jpg)
+A decentralized character distribution network that enables sharing of AI characters across independent instances while maintaining character ownership and authenticity.
 
 ```mermaid
 graph LR
@@ -12,7 +10,7 @@ graph LR
     classDef marketplace fill:#f59e0b,color:#191919,stroke:#333,stroke-width:2px
     classDef standalone fill:#a2ff00,color:#191919,stroke:#333,stroke-width:2px
 
-    subgraph Federation["Plugin Federation Network"]
+    subgraph Federation["Character Federation Network"]
         FN1[Federation Node 1]:::federation
         FN2[Federation Node 2]:::federation
         FN3[Federation Node 3]:::federation
@@ -22,509 +20,314 @@ graph LR
         FN1 <--> FN3
     end
 
-    subgraph Federated["Federated Plugin Publishers"]
-        PP1[Plugin Publisher]:::publisher
-        PP2[pluginpublisher.com]:::publisher
-        PP3[Theme Publisher]:::publisher
+    subgraph Authors["Character Authors"]
+        A1[AI Author]:::publisher
+        A2[Storyteller]:::publisher
+        A3[Game Studio]:::publisher
     end
 
-    subgraph Standalone["Plugin Publisher Instances"]
-        SP1[Independent Publisher 1]:::standalone
-        SP2[Independent Publisher 2]:::standalone
-        SP3[Independent Publisher 3]:::standalone
+    subgraph Instances["Character Instances"]
+        I1[Private Instance]:::standalone
+        I2[Public Instance]:::standalone
+        I3[Studio Instance]:::standalone
 
-        subgraph SP1_Components["Publisher 1 Components"]
-            SP1_R2[(R2 Storage)]
-            SP1_DO[Registry DO]
-            SP1_KV[(KV Store)]
-            SP1_AUTH[Auth DO]
+        subgraph I1_Components["Instance Components"]
+            I1_R2[(R2 Storage)]
+            I1_DO[Character Registry]
+            I1_KV[(KV Store)]
+            I1_AUTH[Auth System]
         end
     end
 
-    subgraph Consumers["Plugin Consumers"]
-        C1[WordPress Site]:::consumer
-        C2[eCommerce Platform]:::consumer
-        C3[Development Agency]:::consumer
-        C4[Theme Marketplace]:::marketplace
-		C5[WordPress Site]:::consumer
+    subgraph Users["Character Users"]
+        U1[Virtual World]:::consumer
+        U2[Game Platform]:::consumer
+        U3[Community Hub]:::consumer
+        U4[Marketplace]:::marketplace
+        U5[Social Platform]:::consumer
     end
 
-    %% Standalone connections
-    SP1 --> SP1_Components
-    C1 --> SP1
-    C2 --> SP2
+    I1 --> I1_Components
+    U1 --> I1
+    U2 --> I2
     
-    %% Federation connections
-    PP1 -->|"Optional Federation"| FN1
-    PP2 -->|"Optional Federation"| FN2
-    PP3 -->|"Optional Federation"| FN3
+    A1 -->|"Federation"| FN1
+    A2 -->|"Federation"| FN2
+    A3 -->|"Federation"| FN3
     
-    %% Federation consumer connections
-    FN1 -->|"Subscribe"| C3
-    FN2 -->|"Subscribe"| C4
-    FN2 -->|"Subscribe"| C5
+    FN1 -->|"Subscribe"| U3
+    FN2 -->|"Subscribe"| U4
+    FN2 -->|"Subscribe"| U5
     
-    %% Cross-node syncing
-    PP1 -.->|"Mirror"| FN2
-    PP2 -.->|"Mirror"| FN3
-    PP3 -.->|"Mirror"| FN1
-
-    %% Add explanatory notes
-    note1[Solid lines = direct connections]
-    note2[Dotted lines = federation syncing]
-    note3[Publishers can operate standalone or join federation]
-    note1 -.-> note2
-    note2 -.-> note3
+    A1 -.->|"Mirror"| FN2
+    A2 -.->|"Mirror"| FN3
+    A3 -.->|"Mirror"| FN1
 ```
 
 ## Overview
 
-The Plugin Federation Network (PFN) is a decentralized system that enables independent plugin publishers to form a network of trusted sources, share plugins, and maintain a distributed plugin ecosystem. Built on Cloudflare Workers and Durable Objects, PFN provides:
+The Character Federation Network (CFN) is a decentralized system that enables AI character authors and publishers to distribute their characters while maintaining control and authenticity. Built on Cloudflare Workers and Durable Objects, CFN provides:
 
-- Decentralized plugin distribution
-- Source verification and trust scoring
-- Plugin mirroring and caching
-- Cryptographic verification of plugin authenticity
-- Activity monitoring and version tracking
-- Health monitoring and synchronization
+- Decentralized character distribution
+- Character ownership verification
+- Secure character data mirroring
+- Version control and updates
+- Activity monitoring
+- Health checks
+- Cross-instance synchronization
 
 ## Prerequisites
 
 Before setting up a federation node, ensure you have:
 
 - A Cloudflare account with Workers and R2 enabled
-- An existing Plugin Publisher instance ([See Plugin Publisher Federated Branch documentation](https://github.com/xpportal/Plugin-Publisher/tree/federated-option))
-- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/get-started/) installed
+- Character Publisher instance with federation support
+- Wrangler CLI installed
 - Node.js 18 or later
-
-Plugin Publisher Integration Details : https://github.com/xpportal/plugin-federation-network/blob/main/INTEGRATIONS.md
+- OpenAI API key (for character model support)
+- Anthropic API key (optional, for Claude model support)
 
 ## Quick Start
 
-1. Create a new federation node:
-   ```bash
-   # Clone the repository
-   git clone https://github.com/xpportal/plugin-federation-network
-   cd plugin-federation
+1. Deploy federation node:
+```bash
+git clone YOUR_REPO_URL
+cd character-federation
+npm install
+npx wrangler deploy
+```
 
-   # Install dependencies
-   npm install
+2. Generate Ed25519 keys:
+```bash
+node -e "
+const crypto = require('crypto');
+const { privateKey, publicKey } = crypto.generateKeyPairSync('ed25519');
+console.log('Private:', privateKey.export({type: 'pkcs8', format: 'pem'}));
+console.log('Public:', publicKey.export({type: 'spki', format: 'pem'}));
+"
+```
 
-   # Deploy the worker
-   npx wrangler deploy
-   ```
+3. Configure worker:
+```bash
+# Add signing keys
+wrangler secret put FEDERATION_PRIVATE_KEY
+wrangler secret put FEDERATION_PUBLIC_KEY
 
-2. Generate Ed25519 signing keys:
-   ```bash
-   node -e "
-   const crypto = require('crypto');
-   const { privateKey, publicKey } = crypto.generateKeyPairSync('ed25519');
-   console.log('Private:', privateKey.export({type: 'pkcs8', format: 'pem'}));
-   console.log('Public:', publicKey.export({type: 'spki', format: 'pem'}));
-   "
-   ```
+# Add API keys
+wrangler secret put OPENAI_API_KEY
+wrangler secret put ANTHROPIC_API_KEY
 
-3. Add the keys to your worker:
-   ```bash
-   wrangler secret put FEDERATION_PRIVATE_KEY
-   wrangler secret put FEDERATION_PUBLIC_KEY
-   ```
+# Set master admin key
+wrangler secret put MASTER_KEY
+```
 
-4. Set up initial admin access:
-   ```bash
-   # Generate a master admin key
-   wrangler secret put MASTER_KEY
-   
-   # Use the master key to create additional admin keys via the API
-   curl -X POST https://your-federation.workers.dev/federation/create-admin-key \
-     -H "Authorization: Bearer YOUR_MASTER_KEY" \
-     -H "Content-Type: application/json" \
-     -d '{"description": "Admin Console Access"}'
-   ```
+4. Create admin access:
+```bash
+curl -X POST https://your-federation.workers.dev/federation/create-admin-key \
+  -H "Authorization: Bearer YOUR_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"description": "Admin Console"}'
+```
 
 ## Architecture
 
-The federation network consists of several components:
-
-1. **Federation Worker**: Routes requests and handles high-level operations
-2. **Federation Durable Object**: Manages source registry and handles synchronization
-3. **R2 Storage**: Stores mirrored plugin files
-4. **KV Storage**: Manages API keys and temporary state
-5. **SQLite Database**: Stores federation state and relationships
+The federation system consists of:
 
 ```mermaid
-graph BT
-    classDef worker fill:#8b5cf6,color:#191919, stroke:#333,stroke-width:2px
-    classDef do fill:#d926aa,stroke:#333,stroke-width:2px
-    classDef storage fill:#d926aa,stroke:#333,stroke-width:2px
-    classDef kv fill:#ad6509,stroke:#333,stroke-width:2px
-    classDef external fill:#a2ff00,stroke:#191919, color:#191919, stroke-width:2px
-    subgraph CoreOps["Core Operations"]
-    W[Federation Worker]:::worker
-    DO[Federation DO]:::do
-    R2[(R2 Storage)]:::storage
-    KV[(KV Storage)]:::kv
-    SQL[(SQLite DB)]:::storage
-    PP[Plugin Publishers]:::external
-    C[Clients]:::external
+graph TB
+    Worker[Federation Worker]
+    DO[Federation DO]
+    R2[(R2 Storage)]
+    KV[(KV Store)]
+    SQL[(SQLite DB)]
+    Auth[Auth System]
 
-    C -->|"1 - API Requests"| W
-    W -->|"2 - Auth & Route"| DO
-    DO -->|"3 - Store Data"| SQL
-    DO -->|"4 - Mirror Plugins"| R2
-    DO -->|"5 - Cache Keys"| KV
-    DO -->|"6 - Verify & Sync"| PP
-    PP -->|"7 - Plugin Data"| DO
-
-        W -.->|"Handle Routes"| DO
-        DO -.->|"Manage State"| SQL
-        DO -.->|"Store Files"| R2:::worker
-    end
+    Client --> Worker
+    Worker --> DO
+    DO --> R2
+    DO --> KV
+    DO --> SQL
+    Worker --> Auth
 ```
+
+### Components
+
+1. **Federation Worker**
+   - Request routing
+   - Authentication
+   - Rate limiting
+   - Cache management
+
+2. **Federation DO**
+   - Character registry management
+   - Source verification
+   - Sync coordination
+   - State management
+
+3. **Storage Layer**
+   - R2: Character data and assets
+   - KV: API keys and temp data
+   - SQLite: Federation state
 
 ## API Endpoints
 
-### Administrative Endpoints
-- `POST /federation/create-admin-key`: Generate new admin API key
-- `POST /federation/add-source`: Register new plugin source
-- `GET /federation/sources`: List all registered sources
-- `POST /federation/verify-source`: Manually trigger source verification
-- `GET /federation/activity`: Get federation activity feed
+### Admin Endpoints
+- `POST /federation/create-admin-key`
+- `GET /federation/sources`
+- `POST /federation/add-source`
+- `POST /federation/verify-source`
+- `GET /federation/activity`
 
-### Source Management
-- `POST /federation/update-source`: Update source information
-- `POST /federation/subscribe`: Subscribe to a source
-- `GET /federation/source-status`: Get source health and sync status
+### Character Management
+- `GET /federation/characters`
+- `GET /federation/character/{id}`
+- `POST /federation/sync-characters`
+- `GET /federation/version-check`
 
-### Plugin Access
-- `GET /federation/plugins`: List available plugins
-- `GET /federation/download`: Download mirrored plugin
-- `GET /federation/verify`: Verify plugin signature
-
-### Web Interface
-The federation node includes a built-in administrative interface accessible at the root URL (`/`). This interface provides:
-- Source management
-- Activity monitoring
-- Version tracking
-- Health status overview
-- Subscription management
-
-## Source Management
-
-### Adding a Source
-
-Sources are added via the federation admin interface or API:
-
-```bash
-curl -X POST https://your-federation.workers.dev/federation/add-source \
-  -H "Authorization: Bearer YOUR_ADMIN_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "instance_url": "https://plugins.example.com",
-    "username": "plugin-author",
-    "public_key": "-----BEGIN PUBLIC KEY-----\n..."
-  }'
-```
-
-### Source Verification Process
-
-```mermaid
-sequenceDiagram
-    participant Client
-    participant Worker
-    participant DO as Federation DO
-    participant PP as Plugin Publisher
-    participant SQL as SQLite DB
-
-    Client->>Worker: POST /federation/verify-source
-    Worker->>Worker: Authenticate Request
-    Worker->>DO: Forward Verification Request
-    
-    DO->>PP: GET /federation-info
-    PP-->>DO: Return Capabilities & Asset Info
-    
-    DO->>SQL: Store Asset Info
-    
-    DO->>PP: POST /verify-ownership
-    Note right of DO: Challenge-Response Auth
-    PP-->>DO: Return Signed Challenge
-    
-    DO->>DO: Verify Ed25519 Signature
-    
-    alt Verification Successful
-        DO->>SQL: Update Source Status & Trust Score
-        DO->>SQL: Record Verification Success
-    else Verification Failed
-        DO->>SQL: Record Verification Failure
-    end
-    
-    DO-->>Worker: Return Verification Result
-    Worker-->>Client: Return Response
-```
-
-### Trust Scoring
-
-Sources are assigned trust scores based on:
-- Successful verifications
-- Uptime and response time
-- Plugin signature validity
-- Federation age
-- Number of subscribers
-
-## Version Tracking and Activity Feed
-
-The federation node maintains an activity feed that tracks:
-- Plugin version updates
-- Source verifications
-- Federation events
-- Health status changes
-
-Activity can be monitored via the web interface or API:
-```bash
-curl -X GET https://your-federation.workers.dev/federation/activity \
-  -H "Authorization: Bearer YOUR_API_KEY"
-```
-
-## Plugin Mirroring
-### Mirroring Process
-1. Source plugins are discovered via the `/author-data` endpoint
-2. Plugin files are downloaded using the source's asset naming scheme
-3. Files are verified against provided signatures
-4. Verified plugins are stored in R2 with metadata
-### Asset Naming Scheme
-Sources must provide their asset information via the `/federation-info` endpoint:
-```json
-{
-  "assetInfo": {
-    "domain": "https://assets.example.com",
-    "namingScheme": "plugins/author/slug/slug.zip"
-  }
-}
-```
-## Plugin Mirroring
-### Mirroring Process
-1. Source plugins are discovered via the `/author-data` endpoint
-2. Plugin files are downloaded using the source's asset naming scheme
-3. Files are verified against provided signatures
-4. Verified plugins are stored in R2 with metadata
-### Asset Naming Scheme
-Sources must provide their asset information via the `/federation-info` endpoint:
-```json
-{
-  "assetInfo": {
-    "domain": "https://assets.example.com",
-    "namingScheme": "plugins/author/slug/slug.zip"
-  }
-}
-```
-
-## Subscription Management
-### Subscribing to Sources
-
-```bash
-curl -X POST https://your-federation.workers.dev/federation/subscribe \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "sourceId": "author@plugins.example.com",
-    "filters": {
-      "tags": ["utilities", "productivity"]
-    }
-  }'
-```
-
-### Sync Process
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant W as Worker
-    participant DO as Federation DO
-    participant PP as Plugin Publisher
-    participant R2 as R2 Storage
-    participant SQL as SQLite DB
-    C->>W: POST /federation/subscribe
-    W->>DO: Handle Subscribe Request
-    
-    DO->>SQL: Check Source Status
-    
-    alt Source Verified
-        DO->>PP: GET /author-data
-        PP-->>DO: Return Plugin List
-        
-        loop For Each Plugin
-            DO->>DO: Apply Subscription Filters
-            
-            alt Plugin Matches Filters
-                DO->>PP: Download Plugin
-                DO->>DO: Verify Plugin Signature
-                DO->>R2: Store Plugin File
-                DO->>SQL: Record in mirrored_plugins
-                DO->>SQL: Update version_updates
-            end
-        end
-        
-        DO->>SQL: Record Subscription
-        DO->>SQL: Update Last Sync Time
-    else Source Not Verified
-        DO-->>W: Return Error
-    end
-    
-    W-->>C: Return Subscription Status
-```
-
+### Source Management  
+- `POST /federation/update-source`
+- `POST /federation/subscribe`
+- `GET /federation/source-status`
 
 ## Database Schema
 
-### Sources Table
+### Sources
 ```sql
 CREATE TABLE sources (
-  id TEXT PRIMARY KEY,              
-  instance_url TEXT NOT NULL,
-  username TEXT NOT NULL,
-  public_key TEXT NOT NULL,
-  status TEXT DEFAULT 'pending',    
-  trust_score FLOAT DEFAULT 0.0,
-  created_at INTEGER DEFAULT (unixepoch()),
-  last_sync INTEGER,
-  asset_domain TEXT,                
-  asset_naming_scheme TEXT,         
-  UNIQUE(instance_url, username)
+    id TEXT PRIMARY KEY,              
+    instance_url TEXT NOT NULL,
+    username TEXT NOT NULL,
+    public_key TEXT NOT NULL,
+    status TEXT DEFAULT 'pending',    
+    trust_score FLOAT DEFAULT 0.0,
+    created_at INTEGER DEFAULT (unixepoch()),
+    last_sync INTEGER,
+    UNIQUE(instance_url, username)
 );
 ```
 
-### Source Verifications Table
+### Federated Characters 
 ```sql
-CREATE TABLE source_verifications (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  source_id TEXT NOT NULL,
-  verifier TEXT NOT NULL,
-  verification_type TEXT NOT NULL,
-  result TEXT NOT NULL,
-  details TEXT,
-  verified_at INTEGER DEFAULT (unixepoch()),
-  FOREIGN KEY(source_id) REFERENCES sources(id)
+CREATE TABLE federated_characters (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    character_id TEXT NOT NULL,
+    source_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    slug TEXT NOT NULL,
+    model_provider TEXT NOT NULL,
+    bio TEXT,
+    settings TEXT,
+    vrm_url TEXT,
+    profile_img TEXT,
+    banner_img TEXT,
+    status TEXT DEFAULT 'private',
+    version TEXT NOT NULL,
+    signature TEXT NOT NULL,
+    mirror_date INTEGER DEFAULT (unixepoch()),
+    FOREIGN KEY(source_id) REFERENCES sources(id)
 );
 ```
 
-### Version Updates Table
+### Character Versions
 ```sql
-CREATE TABLE version_updates (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  plugin_id TEXT NOT NULL,
-  source_id TEXT NOT NULL,
-  old_version TEXT NOT NULL,
-  new_version TEXT NOT NULL,
-  update_time INTEGER DEFAULT (unixepoch()),
-  notified BOOLEAN DEFAULT FALSE,
-  FOREIGN KEY(source_id) REFERENCES sources(id)
-);
-```
-
-### Mirrored Plugins Table
-```sql
-CREATE TABLE mirrored_plugins (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  plugin_id TEXT NOT NULL,
-  source_id TEXT NOT NULL,
-  name TEXT NOT NULL,
-  version TEXT NOT NULL,
-  description TEXT,
-  local_path TEXT NOT NULL,
-  signature TEXT NOT NULL,
-  mirror_date INTEGER DEFAULT (unixepoch()),
-  FOREIGN KEY(source_id) REFERENCES sources(id),
-  UNIQUE(plugin_id, source_id, version)
+CREATE TABLE character_versions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    character_id TEXT NOT NULL,
+    source_id TEXT NOT NULL,
+    old_version TEXT NOT NULL,
+    new_version TEXT NOT NULL,
+    updated_at INTEGER DEFAULT (unixepoch()),
+    FOREIGN KEY(source_id) REFERENCES sources(id)
 );
 ```
 
 ## Configuration
 
-The `wrangler.toml` configuration for a federation node:
-
+Example wrangler.toml:
 ```toml
-name = "plugin-federation"
+name = "character-federation"
 main = "src/index.js"
 compatibility_date = "2024-10-22"
-compatibility_flags = ["nodejs_compat"]
 
 [[durable_objects.bindings]]
 name = "FEDERATION"
 class_name = "FederationDO"
 
 [[migrations]]
-tag = "v3"
-new_sqlite_classes = ["FederationDO"]
+tag = "v1"
+new_classes = ["FederationDO"]
 
 [[r2_buckets]]
-binding = "PLUGIN_BUCKET"
-bucket_name = "federated-plugins"
+binding = "FEDERATION_BUCKET"
+bucket_name = "federated-characters"
 
 [[kv_namespaces]]
 binding = "FEDERATION_KV"
-id = "your-kv-namespace-id"
+id = "..."
 ```
 
-## Security Considerations
+## Security 
 
-### API Key Management
+### API Keys
 - Admin keys prefixed with `fadmin_`
-- Keys stored in KV with metadata
+- Regular key rotation required
+- Keys stored encrypted in KV
 - Master key for initial setup
-- Regular key rotation recommended
+
+### Character Privacy
+- Private/public status control
+- Encrypted storage of sensitive data
+- Model API key isolation
+- Access control per source
 
 ### Source Verification
-- Ed25519 signature verification
-- Challenge-response ownership proof
-- Regular health checks
-- Trust score adjustments
-
-### Plugin Integrity
-- Original signatures preserved
-- Federation layer verification
-- Immutable version storage
-- Version update tracking
-
-## Best Practices
-
-2. **Monitoring**
-   - Check activity feed regularly
-   - Monitor source health status
-   - Track version updates
-   - Review verification history
-
-3. **Network Health**
-   - Monitor node performance
-   - Track synchronization status
-   - Maintain backup nodes
-   - Regular security audits
-### Plugin Integrity
-- Original signatures preserved
-- Federation layer verification
-- Immutable version storage
-- Version update tracking
+- Ed25519 signature validation
+- Challenge-response verification
+- Regular health monitoring
+- Trust score system
 
 ## Best Practices
 
 1. **Source Management**
-   - Regularly verify source health
+   - Verify sources regularly
    - Monitor trust scores
-   - Track version updates
-   - Update asset schemes when needed
+   - Track activity feed
+   - Review sync status
 
-2. **Monitoring**
-   - Check activity feed regularly
-   - Monitor source health status
-   - Track version updates
-   - Review verification history
+2. **Character Updates**
+   - Version all changes
+   - Validate signatures
+   - Test model compatibility
+   - Monitor usage metrics
 
 3. **Network Health**
-   - Monitor node performance
-   - Track synchronization status
-   - Maintain backup nodes
+   - Check node status
+   - Maintain backups
+   - Monitor performance
    - Regular security audits
+
+## Troubleshooting
+
+Common issues and solutions:
+
+1. **Source Verification Failed**
+   - Check source health status
+   - Verify public key format
+   - Confirm challenge response
+   - Review error logs
+
+2. **Sync Issues**
+   - Check source availability
+   - Verify network connectivity
+   - Review rate limits
+   - Check storage space
+
+3. **Character Access Errors**
+   - Verify character permissions
+   - Check model API keys
+   - Review subscription status
+   - Check signature validity
 
 ## Contributing
 
-Contributions are welcome soon...let me just vibe with this for a bit.
-
-
+While in beta, the project is not accepting external contributions. Documentation and testing feedback is welcome.
