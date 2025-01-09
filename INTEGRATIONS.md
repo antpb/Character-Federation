@@ -1,18 +1,22 @@
-
-# Plugin Publisher Federation Integration Requirements
+# Character Publisher Federation Integration Requirements
 
 ## Required Endpoints
 
 ### 1. `/federation-info` (GET)
-Primary endpoint for federation capability discovery and asset information.
+Primary endpoint for federation capability discovery and character information.
 
 ```json
 {
   "version": "1.0.0",
-  "features": ["plugin-distribution", "signature-verification"],
-  "assetInfo": {
-    "domain": "https://assets.example.com",
-    "namingScheme": "plugins/author/slug/slug.zip"
+  "features": ["character-federation", "signature-verification"],
+  "modelProviders": ["openai", "anthropic", "local"],
+  "characterInfo": {
+    "assets": {
+      "domain": "https://assets.example.com",
+      "profileImages": "characters/author/slug/profile.jpg",
+      "bannerImages": "characters/author/slug/banner.jpg",
+      "vrmModels": "characters/author/slug/model.vrm"
+    }
   }
 }
 ```
@@ -23,7 +27,7 @@ Handles challenge-response authentication for source verification.
 **Request:**
 ```json
 {
-  "username": "plugin-author",
+  "username": "character-author",
   "challenge": "uuid-challenge-string"
 }
 ```
@@ -35,36 +39,45 @@ Handles challenge-response authentication for source verification.
 }
 ```
 
-### 3. `/author-data` (GET)
-Provides plugin information for a specific author.
+### 3. `/get-author-characters` (POST)
+Provides character information for a specific author.
 
-**Query Parameters:**
-- `author`: Username of the plugin author
+**Request:**
+```json
+{
+  "author": "character-author"
+}
+```
 
 **Response:**
 ```json
 {
-  "username": "plugin-author",
+  "username": "character-author",
   "member_since": "2024-01-01",
   "website": "https://example.com",
   "github": "github-username",
   "twitter": "twitter-handle",
-  "plugins": [
+  "characters": [
     {
-      "slug": "plugin-id",
-      "name": "Plugin Name",
+      "id": "unique-character-id",
+      "slug": "character-slug",
+      "name": "Character Name",
       "version": "1.0.0",
-      "short_description": "Plugin description",
-      "tags": {
-        "category1": "utilities",
-        "category2": "productivity"
+      "bio": "Character description",
+      "model_provider": "openai",
+      "status": "public",
+      "vrm_url": "https://assets.example.com/characters/author/slug/model.vrm",
+      "profile_img": "https://assets.example.com/characters/author/slug/profile.jpg",
+      "banner_img": "https://assets.example.com/characters/author/slug/banner.jpg",
+      "settings": {
+        "voice": "en-US-Neural2-F",
+        "personality": "friendly",
+        "responseStyle": "casual"
       },
-      "icons": {
-        "1x": "icon-url.png",
-        "2x": "icon-url@2x.png"
-      },
-      "rating": 4.5,
-      "active_installs": 1000
+      "signature": "base64-signature",
+      "wallets": {
+        "ETH": "0x..."
+      }
     }
   ]
 }
@@ -73,23 +86,23 @@ Provides plugin information for a specific author.
 ## Security Requirements
 
 ### 1. Ed25519 Key Pair Generation
-- Generate an Ed25519 key pair for signing plugins and challenges
+- Generate an Ed25519 key pair for signing characters and challenges
 - Store private key securely
 - Make public key available for federation nodes
 
-### 2. Plugin Signing
-Each plugin release must be signed with the publisher's Ed25519 private key:
-1. Create a message containing plugin metadata:
+### 2. Character Signing
+Each character must be signed with the publisher's Ed25519 private key:
+1. Create a message containing character metadata:
 ```json
 {
-  "id": "plugin-slug",
-  "name": "Plugin Name",
+  "id": "unique-character-id",
+  "name": "Character Name",
   "version": "1.0.0",
-  "description": "Plugin description"
+  "bio": "Character description"
 }
 ```
 2. Sign the UTF-8 encoded JSON with Ed25519
-3. Include base64-encoded signature with plugin metadata
+3. Include base64-encoded signature with character metadata
 
 ### 3. Challenge-Response Authentication
 - Accept challenge strings from federation nodes
@@ -98,30 +111,34 @@ Each plugin release must be signed with the publisher's Ed25519 private key:
 
 ## Asset Storage Requirements
 
-### 1. Consistent Asset Naming
-- Implement predictable URL structure for plugin files
-- Follow the declared `namingScheme` format
-- Ensure URLs are publicly accessible
+### 1. Asset Organization
+- Maintain consistent folder structure for character assets
+- Store profile images, banner images, and VRM models
+- Use predictable naming patterns
 
 ### 2. Version Management
-- Maintain all published versions
-- Don't remove old versions
-- Include version in asset path
+- Maintain all published character versions
+- Never delete old versions
+- Include version in character metadata
 
-## Plugin Metadata Requirements
+## Character Metadata Requirements
 
-### 1. Required Plugin Fields
-- `slug`: Unique identifier
+### 1. Required Fields
+- `id`: Unique identifier
+- `slug`: URL-friendly identifier
 - `name`: Display name
 - `version`: Semantic version
-- `short_description`: Brief description
-- `tags`: Categorization
+- `bio`: Character description
+- `model_provider`: AI model provider
+- `status`: Public/private visibility
 - `signature`: Ed25519 signature
 
-### 2. Optional Plugin Fields
-- `icons`: Plugin icons in various sizes
-- `rating`: User rating
-- `active_installs`: Installation count
+### 2. Optional Fields
+- `vrm_url`: VRM model URL
+- `profile_img`: Profile image URL
+- `banner_img`: Banner image URL
+- `wallets`: Associated crypto wallets
+- `settings`: Character configuration
 
 ## Implementation Checklist
 
@@ -130,25 +147,27 @@ Each plugin release must be signed with the publisher's Ed25519 private key:
    - [ ] Set up secure key storage
    - [ ] Implement required endpoints
 
-2. Plugin Processing:
-   - [ ] Add signature generation to release process
+2. Character Management:
+   - [ ] Add signature generation
    - [ ] Implement version tracking
-   - [ ] Set up asset storage with proper naming
+   - [ ] Set up asset storage
+   - [ ] Configure model providers
 
 3. Federation Support:
-   - [ ] Implement challenge-response authentication
-   - [ ] Add federation capability reporting
-   - [ ] Set up author data endpoint
+   - [ ] Implement challenge-response
+   - [ ] Add federation info endpoint
+   - [ ] Set up character data endpoint
 
 4. Security:
    - [ ] Secure private key storage
    - [ ] Implement signature verification
    - [ ] Add request validation
+   - [ ] Configure wallet management
 
-5. Monitoring:
-   - [ ] Track federation requests
-   - [ ] Monitor sync status
-   - [ ] Log verification attempts
+5. Character Privacy:
+   - [ ] Implement visibility controls
+   - [ ] Manage access permissions
+   - [ ] Secure sensitive settings
 
 ## Example Implementation Notes
 
@@ -167,14 +186,14 @@ function signChallenge(challenge, privateKey) {
 }
 ```
 
-3. Sign plugin metadata:
+3. Sign character metadata:
 ```javascript
-function signPluginMetadata(plugin, privateKey) {
+function signCharacterMetadata(character, privateKey) {
   const message = JSON.stringify({
-    id: plugin.slug,
-    name: plugin.name,
-    version: plugin.version,
-    description: plugin.short_description
+    id: character.id,
+    name: character.name,
+    version: character.version,
+    bio: character.bio
   });
   const signature = crypto.sign(null, Buffer.from(message), privateKey);
   return signature.toString('base64');
@@ -186,11 +205,43 @@ function signPluginMetadata(plugin, privateKey) {
 app.get('/federation-info', (req, res) => {
   res.json({
     version: '1.0.0',
-    features: ['plugin-distribution', 'signature-verification'],
-    assetInfo: {
-      domain: 'https://assets.example.com',
-      namingScheme: 'plugins/author/slug/slug.zip'
+    features: ['character-federation', 'signature-verification'],
+    modelProviders: ['openai', 'anthropic', 'local'],
+    characterInfo: {
+      assets: {
+        domain: 'https://assets.example.com',
+        profileImages: 'characters/author/slug/profile.jpg',
+        bannerImages: 'characters/author/slug/banner.jpg',
+        vrmModels: 'characters/author/slug/model.vrm'
+      }
     }
   });
 });
+```
+
+5. Model provider configuration:
+```javascript
+const modelProviders = {
+  openai: {
+    type: 'openai',
+    requiresApiKey: true,
+    models: ['gpt-3.5-turbo', 'gpt-4'],
+    defaultModel: 'gpt-3.5-turbo'
+  },
+  anthropic: {
+    type: 'anthropic',
+    requiresApiKey: true,
+    models: ['claude-2', 'claude-instant'],
+    defaultModel: 'claude-instant'
+  }
+};
+```
+
+6. Character privacy management:
+```javascript
+function isCharacterAccessible(character, requestingUser) {
+  if (character.status === 'public') return true;
+  if (character.author === requestingUser) return true;
+  return false;
+}
 ```
