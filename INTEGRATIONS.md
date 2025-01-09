@@ -70,9 +70,6 @@ Provides character information for a specific author.
       "profile_img": "https://assets.example.com/characters/author/slug/profile.jpg",
       "banner_img": "https://assets.example.com/characters/author/slug/banner.jpg",
       "settings": {
-        "voice": "en-US-Neural2-F",
-        "personality": "friendly",
-        "responseStyle": "casual"
       },
       "signature": "base64-signature",
       "wallets": {
